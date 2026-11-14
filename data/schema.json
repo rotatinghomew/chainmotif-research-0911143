@@ -1,0 +1,58 @@
+{
+  "shipments": {
+    "key": "id",
+    "columns": {
+      "id": "text",
+      "start_at": "time",
+      "end_at": "time",
+      "route": "text",
+      "weight_kg": "number"
+    },
+    "description": "货批物流历程，观察窗可能比业务历程短。",
+    "references": {}
+  },
+  "events": {
+    "key": "id",
+    "columns": {
+      "id": "text",
+      "shipment_id": "text",
+      "event": "text",
+      "occurred_at": "time",
+      "received_at": "time",
+      "scanner": "text"
+    },
+    "description": "发生与接收时刻分开；相同发生时刻不声明内部先后，两个扫描器的事件可并行。",
+    "references": {
+      "shipment_id": "shipments.id"
+    }
+  },
+  "outcomes": {
+    "key": "id",
+    "columns": {
+      "id": "text",
+      "shipment_id": "text",
+      "returned": "bool",
+      "known_at": "time",
+      "decision_at": "time"
+    },
+    "description": "退货结果在 known_at 才确认，decision_at 是计划使用流程信息的时点。",
+    "references": {
+      "shipment_id": "shipments.id"
+    }
+  },
+  "observation_windows": {
+    "key": "id",
+    "columns": {
+      "id": "text",
+      "shipment_id": "text",
+      "from_at": "time",
+      "to_at": "time",
+      "gap_from": "time?",
+      "gap_to": "time?"
+    },
+    "description": "端点左闭右开，gap 表示整段采集缺失；无事件和缺少观测不能互换。",
+    "references": {
+      "shipment_id": "shipments.id"
+    }
+  }
+}

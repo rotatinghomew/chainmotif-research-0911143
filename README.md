@@ -1,10 +1,10 @@
 # chainmotif 海鲜经营资料服务
 
-这个 Python 项目为经营研究提供本地 CSV 资料、领域视图、数值剖面和不可变研究备注。现有经营资料的字段与计量语义见 `docs/domain.md`，HTTP 行为见 `docs/api.md`。服务不连接真实经营系统，也不自动执行交易或订货。
+这个 Python 项目为经营研究提供本地 CSV 资料、领域视图、数值剖面、冷链事件时序组合发现和不可变研究备注。现有经营资料的字段与计量语义见 `docs/domain.md`，HTTP 行为见 `docs/api.md`，组合发现的口径与统计方法见 `docs/patterns.md`。服务不连接真实经营系统，也不自动执行交易或订货。
 
 ## 目录
 
-`chainmotif/catalog.py` 解析并校验资料，`domain.py` 提供当前经营视图，`profile.py` 提供探索性数值摘要，`cases.py` 保存含资料副本的研究备注，`service.py` 处理 HTTP。`data/` 是可重复使用的虚构经营资料，`tests/` 检查当前接口和领域口径，`smoke.py` 发起真实本地 HTTP 请求后退出。
+`chainmotif/catalog.py` 解析并校验资料，`domain.py` 提供当前经营视图，`profile.py` 提供探索性数值摘要，`patterns.py` 在不完整冷链事件上发现时序组合（同环节重复、并行扫描、带间隔限制的操作组合），`cases.py` 保存含资料副本的研究备注，`service.py` 处理 HTTP。`data/` 是可重复使用的虚构经营资料，`tests/` 检查当前接口和领域口径，`smoke.py` 发起真实本地 HTTP 请求后退出。
 
 ## 本机运行
 

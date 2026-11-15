@@ -15,19 +15,22 @@ class CaseStore:
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
 
-    def create(self, catalog, label, options=None, notes=""):
+    def create(self, catalog, label, options=None, notes="", extra=None):
         if not isinstance(label, str) or not label.strip() or len(label) > 120:
             raise ValueError("研究名称需为一至一百二十个字符")
         if options is None:
             options = {}
         if not isinstance(options, dict) or not isinstance(notes, str):
             raise ValueError("研究参数或备注格式无效")
+        if extra is not None and (not isinstance(extra, dict) or set(extra) & {"id", "label", "options", "notes", "created_at", "source_fingerprint", "tables"}):
+            raise ValueError("附加字段无效")
         payload = {
             "id": uuid.uuid4().hex, "label": label.strip(), "options": options, "notes": notes,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "source_fingerprint": catalog.fingerprint,
             "tables": {name: catalog.rows(name) for name in catalog.tables},
         }
+        payload.update(extra or {})
         envelope = {"content": payload, "sha256": hashlib.sha256(canonical(payload)).hexdigest()}
         with (self.directory / (payload["id"] + ".json")).open("xb") as target:
             target.write(canonical(envelope))

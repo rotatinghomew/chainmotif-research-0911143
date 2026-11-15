@@ -16,6 +16,11 @@ def main():
             for path in ("/health", "/tables", "/view"):
                 with urlopen(base + path, timeout=5) as response:
                     print(path, json.dumps(json.load(response), ensure_ascii=False))
+            with urlopen(base + "/pattern-report?matches=0", timeout=30) as response:
+                report = json.load(response)
+            cohorts = report["cohorts"]
+            print("/pattern-report", "模式数", len(report["patterns"]),
+                  "发现集", cohorts["discovery"]["shipments"], "验证集", cohorts["validation"]["shipments"])
             request = Request(base + "/cases", data=json.dumps({"label": "月度经营讨论", "options": {"period": "2026-09"}}, ensure_ascii=False).encode(), headers={"Content-Type": "application/json"})
             with urlopen(request, timeout=5) as response:
                 created = json.load(response)

@@ -1,10 +1,12 @@
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from .cases import CaseStore
 from .catalog import Catalog
 from .domain import overview
+from .patterns import build_report, resolve_parameters
 from .profile import numeric_profiles
 
 
@@ -12,6 +14,7 @@ class Application:
     def __init__(self, data, state):
         self.catalog = Catalog(data)
         self.cases = CaseStore(state)
+        self.pattern_reports = CaseStore(Path(state) / "pattern-reports")
 
     def dispatch(self, method, target, body=None):
         parsed = urlsplit(target)
@@ -34,6 +37,32 @@ class Application:
                 return 200, {"source_fingerprint": self.catalog.fingerprint, "view": overview(self.catalog)}
             if method == "GET" and path == "/profiles":
                 return 200, {"source_fingerprint": self.catalog.fingerprint, "profiles": numeric_profiles(self.catalog)}
+            if method == "GET" and path == "/pattern-report":
+                parameters = {key: values[0] for key, values in query.items()}
+                include_matches = parameters.pop("matches", "1")
+                if include_matches not in ("0", "1"):
+                    raise ValueError("matches 仅支持零或一")
+                report = build_report(self.catalog, parameters)
+                if include_matches == "0":
+                    for entry in report["patterns"]:
+                        entry["matches"] = {"discovery": [], "validation": []}
+                return 200, report
+            if method == "GET" and path == "/pattern-reports":
+                return 200, {"pattern_reports": self.pattern_reports.list()}
+            if method == "GET" and path.startswith("/pattern-reports/"):
+                return 200, self.pattern_reports.read(path.split("/")[-1])
+            if method == "POST" and path == "/pattern-reports":
+                if not isinstance(body, dict):
+                    raise ValueError("请求内容应为对象")
+                if set(body) - {"label", "params", "notes"}:
+                    raise ValueError("请求包含未知字段")
+                parameters = resolve_parameters(body.get("params"))
+                report = build_report(self.catalog, parameters)
+                record = self.pattern_reports.create(
+                    self.catalog, body.get("label"),
+                    options={"parameters": parameters}, notes=body.get("notes", ""),
+                    extra={"report": report})
+                return 201, record
             if method == "GET" and path == "/cases":
                 return 200, {"cases": self.cases.list()}
             if method == "GET" and path.startswith("/cases/"):
